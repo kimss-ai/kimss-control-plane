@@ -1,0 +1,9 @@
+{
+  "server_name": "crm-tools",
+  "display_name": "CRM tools",
+  "base_url": "https://mcp.example.com/mcp",
+  "auth_mode": "headers",
+  "auth_headers": {
+    "Authorization": "Bearer REPLACE_WITH_MCP_TOKEN"
+  }
+}

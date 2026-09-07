@@ -8,4 +8,6 @@ https://raw.githubusercontent.com/kimss-ai/kimss-control-plane/main/AI_INTEGRATI
 
 Do **not** clone this repo into the customer app. Keep the native OpenAI or Anthropic SDK; point `base_url` at `api.kimss.ai`; use a Gateway `kimss_...` key; always send `X-Kimss-Agent-Id`.
 
-Companion product doc: https://kimss.ai/docs/route_traffic
+**Internal MCP** (customer HTTPS MCP servers behind Kimss): see [docs/mcp-routing.md](docs/mcp-routing.md) and the Internal MCP section in `AI_INTEGRATION.md`. That is separate from optional `kimss-mcp-server` (IDE → Kimss API).
+
+Companion product docs: https://kimss.ai/docs/route_traffic · https://kimss.ai/docs/routing_internal_mcp_servers
