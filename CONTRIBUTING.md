@@ -1,5 +1,24 @@
 # Contributing
 
+## Repo scope (customer-facing)
+
+This repository is the **public hub** for buyers, investors, security reviewers, and integrators. Keep it aligned with that audience.
+
+**Belongs here**
+
+- OpenAPI control-plane contract, examples, and conformance tests
+- Integrator guides (Anthropic, A2A / `AI_INTEGRATION.md`)
+- Buyer / decision-maker capability brief
+- Trust signals (SECURITY, Scorecard / Best Practices badges, LICENSE)
+
+**Does not belong here**
+
+- Internal GitHub org / account migration playbooks
+- Repo-metadata sync scripts, social-preview render/upload tooling, Playwright setup helpers
+- Personal or historical assignment repos, credential notes, or operator runbooks
+
+Internal ops for public GitHub hygiene live in `kimssApi` (`scripts/kimss_public_github/`) and the `kimss-docs` vault — not in this tree.
+
 ## Source of truth
 
 The live Kimss API is implemented in **`kimssApi`** (`kimss-ai/kimssApi`, `src/app.py` + `kimssapi_functions/`). This repo is a **public contract mirror** — not the runtime.

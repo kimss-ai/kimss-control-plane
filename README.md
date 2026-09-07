@@ -7,7 +7,7 @@
 
 **Public hub for the Kimss Secure Enterprise Agent Control Plane** — a model-agnostic API gateway for enterprise AI agents, MCP RBAC, and agent-to-agent integration.
 
-Kimss is not a chat platform. Customers bring their own agents, models, and infrastructure. Kimss provides registry, SSO identity mapping, MCP RBAC, governed-request metering, gateway-verified audit (Article 12 path), and an authoritative kill switch at the gateway.
+This repo is for **buyers, investors, security reviewers, and integrators**. Kimss is not a chat platform. Customers bring their own agents, models, and infrastructure. Kimss provides registry, SSO identity mapping, MCP RBAC, governed-request metering, gateway-verified audit (Article 12 path), and an authoritative kill switch at the gateway.
 
 **Live API:** `https://api.kimss.ai`
 
@@ -118,9 +118,8 @@ Runnable scripts and a local gateway simulator: [kimss-python-quickstart](https:
 | [`conformance/`](conformance/) | Spec grounding tests — paths and schemas match `kimssApi` `origin/main` |
 | [`docs/anthropic-onboarding.md`](docs/anthropic-onboarding.md) | Complete Anthropic SDK + env-var onboarding |
 | [`docs/decision-maker-brief.md`](docs/decision-maker-brief.md) | What CISOs / CTOs / procurement get from the control plane |
+| [`docs/hero-control-plane.png`](docs/hero-control-plane.png) | README architecture diagram (PNG + [SVG source](docs/hero-control-plane.svg)) |
 | [`AI_INTEGRATION.md`](AI_INTEGRATION.md) | Agent-to-agent integration rules for coding agents |
-| [`docs/github-org-conversion.md`](docs/github-org-conversion.md) | GitHub org conversion playbook |
-| [`scripts/sync_kimssai_repo_metadata.ps1`](scripts/sync_kimssai_repo_metadata.ps1) | Apply descriptions + topics to public repos |
 
 This spec is **curated and versioned** here. Production disables `/api/openapi.json`; treat this file as the public contract for control-plane integrators.
 
