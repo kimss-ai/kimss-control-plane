@@ -46,7 +46,7 @@ ANTHROPIC_BASE_URL="https://api.kimss.ai"
 ANTHROPIC_API_KEY="kimss_your_kimss_key"
 ```
 
-Also set `X-Kimss-Agent-Id` via your app's header injection or SDK `default_headers` — the gateway requires agent attribution on every governed request.
+Also set `X-Kimss-Agent-Id` via your app's header injection or SDK `default_headers` — **strongly recommended** on every governed request so Agents inventory, audit, and kill-switch attribute correctly. Calls without it may still proxy but appear as unattributed / model-labelled shadow traffic.
 
 OpenAI apps use the parallel pattern:
 

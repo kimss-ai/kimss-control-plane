@@ -23,11 +23,12 @@ This repo is for **buyers, investors, security reviewers, and integrators**. Kim
 
 | Goal | Where to go |
 |------|-------------|
+| **Cascade / coding agent — wire gateway** | Fetch [`AI_INTEGRATION.md`](https://raw.githubusercontent.com/kimss-ai/kimss-control-plane/main/AI_INTEGRATION.md) (see also [`AGENTS.md`](AGENTS.md)) |
 | Route OpenAI / Anthropic traffic in 5 minutes | [kimss-python-quickstart](https://github.com/kimss-ai/kimss-python-quickstart) |
 | Anthropic onboarding (SDK + env vars + troubleshooting) | [docs/anthropic-onboarding.md](docs/anthropic-onboarding.md) |
 | Python control-plane SDK (`pip install kimss`) | [kimss-python-sdk](https://github.com/kimss-ai/kimss-python-sdk) |
 | Java control-plane SDK (Maven `com.kimss:kimss-java`) | [kimss-java-sdk](https://github.com/kimss-ai/kimss-java-sdk) |
-| Agent-to-agent integration rules | [AI_INTEGRATION.md](AI_INTEGRATION.md) |
+| Agent-to-agent integration rules (same as Cascade fetch) | [AI_INTEGRATION.md](AI_INTEGRATION.md) |
 | Security / procurement overview (decision makers) | [docs/decision-maker-brief.md](docs/decision-maker-brief.md) |
 | Product docs & trust center | [kimss.ai](https://kimss.ai) · [Trust Center](https://kimss.ai/trust) |
 
@@ -119,7 +120,8 @@ Runnable scripts and a local gateway simulator: [kimss-python-quickstart](https:
 | [`docs/anthropic-onboarding.md`](docs/anthropic-onboarding.md) | Complete Anthropic SDK + env-var onboarding |
 | [`docs/decision-maker-brief.md`](docs/decision-maker-brief.md) | What CISOs / CTOs / procurement get from the control plane |
 | [`docs/hero-control-plane.png`](docs/hero-control-plane.png) | README architecture diagram (PNG + [SVG source](docs/hero-control-plane.svg)) |
-| [`AI_INTEGRATION.md`](AI_INTEGRATION.md) | Agent-to-agent integration rules for coding agents |
+| [`AI_INTEGRATION.md`](AI_INTEGRATION.md) | Agent-to-agent / Cascade gateway wiring rules |
+| [`AGENTS.md`](AGENTS.md) | Short pointer for coding agents to the A2A contract |
 
 This spec is **curated and versioned** here. Production disables `/api/openapi.json`; treat this file as the public contract for control-plane integrators.
 
