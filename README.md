@@ -28,6 +28,7 @@ Kimss is not a chat platform. Customers bring their own agents, models, and infr
 | Python control-plane SDK (`pip install kimss`) | [kimss-python-sdk](https://github.com/kimss-ai/kimss-python-sdk) |
 | Java control-plane SDK (Maven `com.kimss:kimss-java`) | [kimss-java-sdk](https://github.com/kimss-ai/kimss-java-sdk) |
 | Agent-to-agent integration rules | [AI_INTEGRATION.md](AI_INTEGRATION.md) |
+| Security / procurement overview (decision makers) | [docs/decision-maker-brief.md](docs/decision-maker-brief.md) |
 | Product docs & trust center | [kimss.ai](https://kimss.ai) · [Trust Center](https://kimss.ai/trust) |
 
 ---
@@ -116,6 +117,7 @@ Runnable scripts and a local gateway simulator: [kimss-python-quickstart](https:
 | [`examples/`](examples/) | MCP RBAC grant and agent governance policy examples |
 | [`conformance/`](conformance/) | Spec grounding tests — paths and schemas match `kimssApi` `origin/main` |
 | [`docs/anthropic-onboarding.md`](docs/anthropic-onboarding.md) | Complete Anthropic SDK + env-var onboarding |
+| [`docs/decision-maker-brief.md`](docs/decision-maker-brief.md) | What CISOs / CTOs / procurement get from the control plane |
 | [`AI_INTEGRATION.md`](AI_INTEGRATION.md) | Agent-to-agent integration rules for coding agents |
 | [`docs/github-org-conversion.md`](docs/github-org-conversion.md) | GitHub org conversion playbook |
 | [`scripts/sync_kimssai_repo_metadata.ps1`](scripts/sync_kimssai_repo_metadata.ps1) | Apply descriptions + topics to public repos |
@@ -137,6 +139,8 @@ This spec is **curated and versioned** here. Production disables `/api/openapi.j
 | Telemetry | `GET /api/v1/me/usage`, `/api/v1/telemetry/*` | Any workspace member |
 
 Plans meter **governed requests** (not Kimss credits). Developer tier: 25,000/mo free, hard HTTP 429 with `error=governed_requests_exhausted` at cap.
+
+**Governance capabilities (product):** workspace Guardrails (content safety & prompt attacks, optional PII/secret scrub, Authority Boundary), default-off web search and internal MCP opt-ins, tool argument policies, Threat Intercepts (Production+), write-only provider vault, and an authoritative agent kill switch. Full buyer-oriented overview: **[docs/decision-maker-brief.md](docs/decision-maker-brief.md)**.
 
 ---
 
