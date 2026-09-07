@@ -24,6 +24,7 @@ This repo is for **buyers, investors, security reviewers, and integrators**. Kim
 | Goal | Where to go |
 |------|-------------|
 | **Cascade / coding agent — wire gateway** | Fetch [`AI_INTEGRATION.md`](https://raw.githubusercontent.com/kimss-ai/kimss-control-plane/main/AI_INTEGRATION.md) (see also [`AGENTS.md`](AGENTS.md)) |
+| Internal MCP servers (register, discover, RBAC grants) | [docs/mcp-routing.md](docs/mcp-routing.md) · OpenAPI tag `mcp` |
 | Route OpenAI / Anthropic traffic in 5 minutes | [kimss-python-quickstart](https://github.com/kimss-ai/kimss-python-quickstart) |
 | Anthropic onboarding (SDK + env vars + troubleshooting) | [docs/anthropic-onboarding.md](docs/anthropic-onboarding.md) |
 | Python control-plane SDK (`pip install kimss`) | [kimss-python-sdk](https://github.com/kimss-ai/kimss-python-sdk) |
@@ -118,6 +119,7 @@ Runnable scripts and a local gateway simulator: [kimss-python-quickstart](https:
 | [`examples/`](examples/) | MCP RBAC grant and agent governance policy examples |
 | [`conformance/`](conformance/) | Spec grounding tests — paths and schemas match `kimssApi` `origin/main` |
 | [`docs/anthropic-onboarding.md`](docs/anthropic-onboarding.md) | Complete Anthropic SDK + env-var onboarding |
+| [`docs/mcp-routing.md`](docs/mcp-routing.md) | Internal MCP proxy: Guardrails opt-in, register, discover, grants |
 | [`docs/decision-maker-brief.md`](docs/decision-maker-brief.md) | What CISOs / CTOs / procurement get from the control plane |
 | [`docs/hero-control-plane.png`](docs/hero-control-plane.png) | README architecture diagram (PNG + [SVG source](docs/hero-control-plane.svg)) |
 | [`AI_INTEGRATION.md`](AI_INTEGRATION.md) | Agent-to-agent / Cascade gateway wiring rules |
