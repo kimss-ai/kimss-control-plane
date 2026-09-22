@@ -21,6 +21,19 @@ Product companion: https://kimss.ai/docs/route_traffic
 
 ---
 
+## What to install
+
+| Situation | Do this |
+|-----------|---------|
+| App already uses OpenAI, Anthropic, LangChain, or another OpenAI-compatible client | Keep that client. Change base URL, Gateway key, vaulted model alias, and `X-Kimss-Agent-Id`. |
+| No LLM client yet, and the user wants a new Python agent | `pip install kimss-forge`, then `gateway="kimss"` with `agent_id` and `workspace_key`. Repo: https://github.com/kimss-ai/kimss-forge |
+| Java, Node, or any other language | Vendor SDK or plain HTTP. JDK `HttpClient` sample: https://kimss.ai/docs/route_traffic |
+| Do **not** do this for new work | `pip install kimss`, Maven `com.kimss:kimss-java` / `ai.kimss:kimss-java`, or `KimssClient` / `AgentsApi.run` for chat. Those control-plane clients are **deprecated** for gateway onboarding. |
+
+Optional IDE MCP (`kimss-mcp-server`) is a separate extra. It is not required to route an application.
+
+---
+
 ## Cascade / coding-agent procedure (follow in order)
 
 When the user asks you to onboard a repo to Kimss (or “route traffic through the Kimss gateway”):
@@ -29,18 +42,17 @@ When the user asks you to onboard a repo to Kimss (or “route traffic through t
    - Provider Vault (`/app/vault`) — each model they call must exist as `custom:<model_id>`
    - Gateway API key (`/app/keys`) — a `kimss_...` workspace key (not the provider key)
 2. **Detect** whether the codebase uses OpenAI-compatible clients, Anthropic clients, or both (SDK imports, `OPENAI_*` / `ANTHROPIC_*` env, LangChain/Vercel AI `baseURL`, raw `fetch` to `api.openai.com` / `api.anthropic.com`).
-3. **Keep the native client** — never introduce `KimssClient` for chat/completions/messages.
-4. **Point the client at Kimss:**
+3. **Choose the client** using [What to install](#what-to-install). If an OpenAI or Anthropic client already exists, keep it. Never add `KimssClient`, `pip install kimss`, or `com.kimss:kimss-java`. If there is no LLM client and the user wants a new Python agent, add Kimss Forge (`pip install kimss-forge`, `gateway="kimss"`).
+4. **Point the client at Kimss** (skip when using Kimss Forge — `gateway="kimss"` sets the listener):
    - OpenAI-compatible → `base_url` / `baseURL` = `https://api.kimss.ai/v1`
    - Anthropic → `base_url` / `baseURL` = `https://api.kimss.ai` (**no** `/v1/messages` suffix — the SDK appends it)
-5. **Swap the API key** to the Gateway `kimss_...` key via env (`OPENAI_API_KEY` / `ANTHROPIC_API_KEY` / `KIMSS_API_KEY`). Never commit provider keys.
+5. **Swap the API key** to the Gateway `kimss_...` key via env (`OPENAI_API_KEY` / `ANTHROPIC_API_KEY` / `KIMSS_API_KEY`). For Kimss Forge pass `workspace_key="kimss_..."` (do not put the provider key there). Never commit provider keys.
 6. **Map models** to vaulted aliases (`custom:your-model-id`). Do not leave bare `gpt-4o` / `claude-…` unless that exact string is what was vaulted.
 7. **Always send** `X-Kimss-Agent-Id` (and preferably `X-Kimss-Agent-Name`) on inference — via `default_headers`, `defaultHeaders`, `extra_headers`, or middleware. Pick a stable slug per service (e.g. `billing-bot`).
 8. **Forward headers** through any HTTP interceptor / proxy / Hermis-style middleware — never strip Kimss agent headers.
 9. **If the user also needs internal MCP** (their HTTPS MCP servers behind Kimss): follow [Internal MCP routing](#internal-mcp-routing) and [docs/mcp-routing.md](docs/mcp-routing.md). Do **not** confuse this with optional `kimss-mcp-server` (IDE → Kimss API).
 10. **Verify** (see [Verification](#verification-after-wiring) below). Do not claim success until a live call works or the user confirms Vault + key + model alias.
-
-Optional: `pip install kimss` only if you want `kimss.gateway_headers(...)` for Agent Tracking context — **not** required for inference.
+11. **If the call is blocked by policy**, follow [Guardrails](#guardrails-do-not-fix-these-by-changing-the-client). Do not change `base_url` or install a Kimss SDK to clear HTTP 451 or a tool-argument error.
 
 ---
 
@@ -61,7 +73,7 @@ If a model is not vaulted, Kimss returns an error pointing to Provider Vault. **
 3. **OpenAI:** `base_url` = `https://api.kimss.ai/v1`.
 4. **Anthropic:** `base_url` = `https://api.kimss.ai` only.
 5. **Always** inject `X-Kimss-Agent-Id` (preferably also `X-Kimss-Agent-Name`) for JIT inventory, audit, spend attribution, and kill-switch. Omitting it may still proxy, but agents appear as unattributed / model-labelled shadow rows and kill-switch by name is weaker.
-6. **Call-site visibility (recommended):** when `kimss` is installed, use `kimss.gateway_headers(agent_id=..., agent_name=...)` as `extra_headers`. A plain dict with `X-Kimss-Agent-Id` is enough.
+6. **Call-site visibility:** pass a plain dict with `X-Kimss-Agent-Id` (and `X-Kimss-Agent-Name`) as `default_headers` / `extra_headers`. Do not install `kimss` just to build that dict.
 7. **Streaming** works the same (`stream=True` / `stream: true`) — keep Kimss base URL and headers.
 8. **Control-plane API** (registry, MCP RBAC, audit, metering, kill switch): use [`openapi/control-plane.yaml`](openapi/control-plane.yaml) — not chat endpoints. OpenAPI does **not** duplicate inference paths; this file is the inference contract. MCP register/grant shapes are in that spec; step-by-step MCP: [docs/mcp-routing.md](docs/mcp-routing.md).
 9. **Hermis** is the Kimss orchestration framework (not LangGraph). The gateway applies identity, kill switch, spend policy, and audit on the routed hop.
@@ -172,6 +184,28 @@ curl -s -H "Authorization: Bearer kimss_..." \
 
 Shape: [`examples/governed-requests-meter-response.json`](examples/governed-requests-meter-response.json).
 
+A policy denial (below) still counts as “the route works.” Report the policy to the user. Do not rewrite the client.
+
+---
+
+## Guardrails (do not fix these by changing the client)
+
+Workspace policies at `/app/guardrails` run **after** the gateway accepts the call. Customer doc: https://kimss.ai/docs/trust_safety
+
+Web Search and Internal MCP start **off**. A hello-world chat completion does not need either. Do not enable them unless the user asked.
+
+| Result | Meaning | What you should do |
+|--------|---------|--------------------|
+| HTTP **451** `content_safety` or `prompt_injection` | Content safety or Prompt Shields | Leave the client. The admin adjusts Guardrails or the prompt. |
+| HTTP **451** `pii_scrub` | PII block (Production+). Alert mode returns **200** and still logs an intercept. | Same. Do not strip the Gateway key out of the request to “avoid PII.” |
+| HTTP **451** `safety_check_failed` | Safety backend failed closed | Not a bad API key. Do not retry in a loop. |
+| HTTP **403** `web_search_disabled` | Web Search is off | Chat without that tool. Do not flip the workspace opt-in unless asked. |
+| HTTP **403** `mcp_disabled` | Internal MCP is off | Only continue to [Internal MCP routing](#internal-mcp-routing) if the user asked to call their MCP servers. |
+| HTTP **403** `agent_disabled` | Kill switch | Re-enable under **Agents**, or send a different `X-Kimss-Agent-Id`. |
+| HTTP **200** tool JSON `error: policy_violation` | Argument shape rule (allowlist, regex, exact, max length, deny pattern) | The chat call succeeded. Change the tool arguments or the rule. Do not rewrite the HTTP client. |
+| HTTP **200** tool JSON `error: authority_boundary` | Trusted source: a model- or tool-supplied value was blocked | The human must name the value this turn. Not a wiring bug. |
+| HTTP **200** `hitl_pending` (or **409** with `X-Kimss-Hitl-Protocol: interrupt`) on `POST /v1/agents/run` | Approvals for an irreversible tool (Scale+) | Resume the same thread after approve. Invisible Proxy `POST /v1/chat/completions` does not run this pause. |
+
 ---
 
 ## Troubleshooting
@@ -186,7 +220,9 @@ Shape: [`examples/governed-requests-meter-response.json`](examples/governed-requ
 | Model not found / vault error | Model not registered as `custom:…` | Vault under `/app/vault`; match the exact model string |
 | Anthropic path errors | `base_url` includes `/v1/messages` | Use `https://api.kimss.ai` only |
 | OpenAI 404 on `/chat/completions` | Used Anthropic base without `/v1` | OpenAI must use `https://api.kimss.ai/v1` |
-| MCP register/call blocked | Guardrails Internal MCP off | Enable under `/app/guardrails`; see [docs/mcp-routing.md](docs/mcp-routing.md) |
+| HTTP **451** | Guardrails (content safety, prompt attack, PII, safety backend) | Wiring succeeded. See [Guardrails](#guardrails-do-not-fix-these-by-changing-the-client). Do not change `base_url`. |
+| HTTP **200** with tool `policy_violation` or `authority_boundary` | Argument rule or Authority Boundary | Wiring succeeded. Fix the tool value or the rule under `/app/guardrails`. |
+| MCP register/call blocked | Guardrails Internal MCP off | Enable under `/app/guardrails` only if the user asked; see [docs/mcp-routing.md](docs/mcp-routing.md) |
 
 ---
 
@@ -209,9 +245,11 @@ Then discover, attach tools in the Agents UI, and optionally upsert grants (`exa
 
 ---
 
-## What `KimssClient` is for
+## Deprecated control-plane clients
 
-Control-plane / DevOps only (`agents.register`, `usage.report`, MCP registry helpers if used). Inference methods are deprecated. Prefer this file + native SDKs for chat.
+`pip install kimss` (PyPI `kimss`, [kimss-python-sdk](https://github.com/kimss-ai/kimss-python-sdk)) and Maven `com.kimss:kimss-java` ([kimss-java-sdk](https://github.com/kimss-ai/kimss-java-sdk)) are **deprecated for new gateway onboarding**. Do not add them while wiring chat.
+
+Inference helpers on those clients (`KimssClient` chat/run, `AgentsApi.run`) are already deprecated. Registry helpers (`agents.register`, `usage.report`) remain only for existing callers. New Python agents use [Kimss Forge](https://github.com/kimss-ai/kimss-forge).
 
 ## Kill switch
 
@@ -230,14 +268,18 @@ HTTP **403** with `agent_disabled` (OpenAI `error.code` or Anthropic error body)
 
 ## Runnable tutorial
 
-Copy-paste scripts + local gateway simulator: [kimss-python-quickstart](https://github.com/kimss-ai/kimss-python-quickstart).
+Copy-paste gateway scripts (native clients, not the deprecated control-plane SDKs): [kimss-python-quickstart](https://github.com/kimss-ai/kimss-python-quickstart).
+
+New Python agent loop: [kimss-forge](https://github.com/kimss-ai/kimss-forge) (`pip install kimss-forge`).
 
 ## Related
 
 - https://kimss.ai/docs/route_traffic
+- https://kimss.ai/docs/trust_safety
+- https://kimss.ai/docs/agent_harness
+- https://kimss.ai/open-source
 - https://kimss.ai/docs/routing_internal_mcp_servers
 - [docs/mcp-routing.md](docs/mcp-routing.md)
 - [docs/anthropic-onboarding.md](docs/anthropic-onboarding.md)
 - [docs/decision-maker-brief.md](docs/decision-maker-brief.md) — buyer / security overview (not required for wiring)
-- [kimss-python-sdk](https://github.com/kimss-ai/kimss-python-sdk) — optional `pip install kimss`
 - [kimss.ai/trust](https://kimss.ai/trust)

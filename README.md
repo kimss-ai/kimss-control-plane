@@ -24,14 +24,16 @@ This repo is for **buyers, investors, security reviewers, and integrators**. Kim
 | Goal | Where to go |
 |------|-------------|
 | **Cascade / coding agent — wire gateway** | Fetch [`AI_INTEGRATION.md`](https://raw.githubusercontent.com/kimss-ai/kimss-control-plane/main/AI_INTEGRATION.md) (see also [`AGENTS.md`](AGENTS.md)) |
+| New Python agent (local, then production) | [kimss-forge](https://github.com/kimss-ai/kimss-forge) — `pip install kimss-forge`, then `gateway="kimss"` |
 | Internal MCP servers (register, discover, RBAC grants) | [docs/mcp-routing.md](docs/mcp-routing.md) · OpenAPI tag `mcp` |
 | Route OpenAI / Anthropic traffic in 5 minutes | [kimss-python-quickstart](https://github.com/kimss-ai/kimss-python-quickstart) |
 | Anthropic onboarding (SDK + env vars + troubleshooting) | [docs/anthropic-onboarding.md](docs/anthropic-onboarding.md) |
-| Python control-plane SDK (`pip install kimss`) | [kimss-python-sdk](https://github.com/kimss-ai/kimss-python-sdk) |
-| Java control-plane SDK (Maven `com.kimss:kimss-java`) | [kimss-java-sdk](https://github.com/kimss-ai/kimss-java-sdk) |
+| Guardrails a coding agent will hit (451, argument rules) | [AI_INTEGRATION.md](AI_INTEGRATION.md) · [kimss.ai/docs/trust_safety](https://kimss.ai/docs/trust_safety) |
 | Agent-to-agent integration rules (same as Cascade fetch) | [AI_INTEGRATION.md](AI_INTEGRATION.md) |
 | Security / procurement overview (decision makers) | [docs/decision-maker-brief.md](docs/decision-maker-brief.md) |
 | Product docs & trust center | [kimss.ai](https://kimss.ai) · [Trust Center](https://kimss.ai/trust) |
+
+`pip install kimss` and Maven `com.kimss:kimss-java` are **deprecated for new gateway onboarding**. Keep the native OpenAI or Anthropic client, or start from Kimss Forge. Do not add those packages while wiring chat.
 
 ---
 
@@ -94,6 +96,7 @@ See **[AI_INTEGRATION.md](AI_INTEGRATION.md)** for the full contract.
 | `401` / invalid API key | Wrong or missing `kimss_...` key | Mint a new key under **Gateway → Generate Key** |
 | `400` / missing agent | No `X-Kimss-Agent-Id` header | Set agent id and pass via `default_headers` or `extra_headers` |
 | `403` / `agent_disabled` | Kill switch is on | Re-enable the agent under **Governance → Agents** |
+| HTTP `451` or tool `policy_violation` / `authority_boundary` | Guardrails fired after a successful route | Do not change `base_url`. See [AI_INTEGRATION.md](AI_INTEGRATION.md) Guardrails |
 | `429` / `governed_requests_exhausted` | Monthly allowance reached | Check meter (below) or upgrade at [kimss.ai/pricing](https://kimss.ai/pricing) |
 | Model not found | Model not vaulted | Vault the provider endpoint + model under **Governance → Connected Infrastructure** |
 | Anthropic path errors | `base_url` includes `/v1/messages` | Use `https://api.kimss.ai` only — see [anthropic onboarding](docs/anthropic-onboarding.md) |
