@@ -48,7 +48,7 @@ When the user asks you to onboard a repo to Kimss (or “route traffic through t
    - Anthropic → `base_url` / `baseURL` = `https://api.kimss.ai` (**no** `/v1/messages` suffix — the SDK appends it)
 5. **Swap the API key** to the Gateway `kimss_...` key via env (`OPENAI_API_KEY` / `ANTHROPIC_API_KEY` / `KIMSS_API_KEY`). For Kimss Forge pass `workspace_key="kimss_..."` (do not put the provider key there). Never commit provider keys.
 6. **Map models** to vaulted aliases (`custom:your-model-id`). Do not leave bare `gpt-4o` / `claude-…` unless that exact string is what was vaulted.
-7. **Always send** `X-Kimss-Agent-Id` (and preferably `X-Kimss-Agent-Name`) on inference — via `default_headers`, `defaultHeaders`, `extra_headers`, or middleware. Pick a stable slug per service (e.g. `billing-bot`).
+7. **Always send** `X-Kimss-Agent-Id` (and preferably `X-Kimss-Agent-Name`) on inference. Pick a stable slug per service (e.g. `billing-bot`). On Python, put that dict in the client constructor as `default_headers`, or pass `extra_headers` to `.create()`. **Never** pass a parameter named `headers` to `chat.completions.create()` or `messages.create()` — the SDK raises `TypeError: unexpected keyword argument 'headers'` and the request never leaves the process. Node uses `defaultHeaders` on the client. Raw HTTP uses the header itself.
 8. **Forward headers** through any HTTP interceptor / proxy / Hermis-style middleware — never strip Kimss agent headers.
 9. **If the user also needs internal MCP** (their HTTPS MCP servers behind Kimss): follow [Internal MCP routing](#internal-mcp-routing) and [docs/mcp-routing.md](docs/mcp-routing.md). Do **not** confuse this with optional `kimss-mcp-server` (IDE → Kimss API).
 10. **Verify** (see [Verification](#verification-after-wiring) below). Do not claim success until a live call works or the user confirms Vault + key + model alias.
@@ -73,7 +73,7 @@ If a model is not vaulted, Kimss returns an error pointing to Provider Vault. **
 3. **OpenAI:** `base_url` = `https://api.kimss.ai/v1`.
 4. **Anthropic:** `base_url` = `https://api.kimss.ai` only.
 5. **Always** inject `X-Kimss-Agent-Id` (preferably also `X-Kimss-Agent-Name`) for JIT inventory, audit, spend attribution, and kill-switch. Omitting it may still proxy, but agents appear as unattributed / model-labelled shadow rows and kill-switch by name is weaker.
-6. **Call-site visibility:** pass a plain dict with `X-Kimss-Agent-Id` (and `X-Kimss-Agent-Name`) as `default_headers` / `extra_headers`. Do not install `kimss` just to build that dict.
+6. **Call-site visibility:** pass a plain dict with `X-Kimss-Agent-Id` (and `X-Kimss-Agent-Name`) as `default_headers` on the client, or as `extra_headers` on `.create()`. The argument name is not `headers`. Do not install `kimss` just to build that dict.
 7. **Streaming** works the same (`stream=True` / `stream: true`) — keep Kimss base URL and headers.
 8. **Control-plane API** (registry, MCP RBAC, audit, metering, kill switch): use [`openapi/control-plane.yaml`](openapi/control-plane.yaml) — not chat endpoints. OpenAPI does **not** duplicate inference paths; this file is the inference contract. MCP register/grant shapes are in that spec; step-by-step MCP: [docs/mcp-routing.md](docs/mcp-routing.md).
 9. **Hermis** is the Kimss orchestration framework (not LangGraph). The gateway applies identity, kill switch, spend policy, and audit on the routed hop.
@@ -99,6 +99,23 @@ KIMSS_MODEL="custom:your-model-id"
 
 You still must attach `X-Kimss-Agent-Id` in code or middleware — env alone does not add headers for most SDKs.
 
+## SDK keyword names
+
+The OpenAI and Anthropic Python SDKs do not accept `headers=` on `.create()`. That fails in the customer process, before any request reaches Kimss:
+
+```text
+TypeError: Completions.create() got an unexpected keyword argument 'headers'
+```
+
+| SDK | Client constructor | Per-call `.create()` |
+|-----|--------------------|----------------------|
+| OpenAI Python | `default_headers={...}` | `extra_headers={...}` |
+| Anthropic Python | `default_headers={...}` | `extra_headers={...}` |
+| OpenAI Node | `defaultHeaders: {...}` | do not pass `headers` |
+| cURL / raw HTTP | `X-Kimss-Agent-Id` request header | — |
+
+Prefer `default_headers` / `defaultHeaders` on the client so tool loops keep the same agent id. If the client is already constructed, add `extra_headers=` on the existing `.create()` call. Do not rename that argument to `headers`.
+
 ---
 
 ## OpenAI (Python)
@@ -117,6 +134,16 @@ client = OpenAI(
 response = client.chat.completions.create(
     model="custom:your-model-id",  # vaulted alias
     messages=[{"role": "user", "content": "Execute audit."}],
+)
+```
+
+If the `OpenAI(...)` client already exists and you are only editing the call, the per-call keyword is `extra_headers` (not `headers`):
+
+```python
+response = client.chat.completions.create(
+    model="custom:your-model-id",
+    messages=[{"role": "user", "content": "Execute audit."}],
+    extra_headers={"X-Kimss-Agent-Id": "my-service"},
 )
 ```
 
@@ -212,6 +239,7 @@ Web Search and Internal MCP start **off**. A hello-world chat completion does no
 
 | Symptom | Likely cause | Fix |
 |---------|--------------|-----|
+| `TypeError` … `unexpected keyword argument 'headers'` | Passed `headers=` to `.create()` | Use `default_headers` on the client, or `extra_headers` on `.create()`. See [SDK keyword names](#sdk-keyword-names). |
 | `401` / invalid API key | Wrong or missing `kimss_...` key | Mint under **Gateway → Keys** (`/app/keys`) |
 | `400` / missing agent / attribution errors | Header stripped or empty where required by a path | Set `X-Kimss-Agent-Id` on every inference call |
 | `403` / `agent_disabled` | Kill switch | Re-enable under **Governance → Agents** |

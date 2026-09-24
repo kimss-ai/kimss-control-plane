@@ -6,7 +6,7 @@ This repository is the **public Kimss control-plane hub** for buyers and integra
 
 https://raw.githubusercontent.com/kimss-ai/kimss-control-plane/main/AI_INTEGRATION.md
 
-Do **not** clone this repo into the customer app. Keep the native OpenAI or Anthropic SDK; point `base_url` at `api.kimss.ai`; use a Gateway `kimss_...` key; always send `X-Kimss-Agent-Id`.
+Do **not** clone this repo into the customer app. Keep the native OpenAI or Anthropic SDK; point `base_url` at `api.kimss.ai`; use a Gateway `kimss_...` key; always send `X-Kimss-Agent-Id`. On Python that dict is `default_headers` on the client or `extra_headers` on `.create()` — never a parameter named `headers` (`TypeError: unexpected keyword argument 'headers'`).
 
 Do **not** `pip install kimss` or add Maven `com.kimss:kimss-java` for new gateway work. Those control-plane clients are deprecated. A new Python agent uses [Kimss Forge](https://github.com/kimss-ai/kimss-forge) (`pip install kimss-forge`, `gateway="kimss"`).
 
