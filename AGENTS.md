@@ -1,8 +1,16 @@
-# Agent instructions (Cascade / Cursor / Claude Code)
+# Agent instructions (Cascade / Cursor / Claude Code / Codex)
 
 This repository is the **public Kimss control-plane hub** for buyers and integrators.
 
-**To wire a customer application to the Kimss gateway, fetch and follow:**
+## When the user says “onboard Kimss” (or only pastes this repo)
+
+**Run the guided workflow first** — welcome the user, then collect Gateway key and vaulted model before editing code:
+
+https://raw.githubusercontent.com/kimss-ai/kimss-control-plane/main/ONBOARDING.md
+
+## When wiring (key + model already known)
+
+Fetch and follow the integration contract:
 
 https://raw.githubusercontent.com/kimss-ai/kimss-control-plane/main/AI_INTEGRATION.md
 

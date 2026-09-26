@@ -1,5 +1,7 @@
 # Kimss Control Plane
 
+> **Coding agent?** If a user asked you to onboard Kimss (or only pasted this repo link), follow **[ONBOARDING.md](ONBOARDING.md)** — welcome the user first, then collect the Gateway key and vaulted model before editing code. Wiring contract: [AI_INTEGRATION.md](AI_INTEGRATION.md).
+
 [![License: MIT](https://img.shields.io/badge/License-MIT-indigo.svg)](LICENSE)
 [![CI](https://github.com/kimss-ai/kimss-control-plane/actions/workflows/ci.yml/badge.svg)](https://github.com/kimss-ai/kimss-control-plane/actions/workflows/ci.yml)
 [![OpenSSF Scorecard](https://api.scorecard.dev/projects/github.com/kimss-ai/kimss-control-plane/badge)](https://scorecard.dev/viewer/?uri=github.com/kimss-ai/kimss-control-plane)
@@ -23,6 +25,7 @@ This repo is for **buyers, investors, security reviewers, and integrators**. Kim
 
 | Goal | Where to go |
 |------|-------------|
+| **Coding agent — guided onboard** | Fetch [`ONBOARDING.md`](https://raw.githubusercontent.com/kimss-ai/kimss-control-plane/main/ONBOARDING.md) (welcome → key → vault → wire) |
 | **Cascade / coding agent — wire gateway** | Fetch [`AI_INTEGRATION.md`](https://raw.githubusercontent.com/kimss-ai/kimss-control-plane/main/AI_INTEGRATION.md) (see also [`AGENTS.md`](AGENTS.md)) |
 | New Python agent (local, then production) | [kimss-forge](https://github.com/kimss-ai/kimss-forge) — `pip install kimss-forge`, then `gateway="kimss"` |
 | Internal MCP servers (register, discover, RBAC grants) | [docs/mcp-routing.md](docs/mcp-routing.md) · OpenAPI tag `mcp` |
@@ -71,7 +74,13 @@ The Anthropic SDK appends `/v1/messages`. Full setup, env-var path, and troubles
 
 ## Agent-to-agent (A2A)
 
-**Canonical Cascade / Cursor / Claude Code fetch URL:**
+**Guided onboarding (when the user only gave the repo link):**
+
+```text
+https://raw.githubusercontent.com/kimss-ai/kimss-control-plane/main/ONBOARDING.md
+```
+
+**Canonical wiring contract (Cascade / Cursor / Claude Code):**
 
 ```text
 https://raw.githubusercontent.com/kimss-ai/kimss-control-plane/main/AI_INTEGRATION.md

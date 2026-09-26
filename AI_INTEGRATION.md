@@ -2,6 +2,8 @@
 
 **Canonical public A2A contract** for Cursor, Cascade, Claude Code, Windsurf, Devin, and other coding assistants.
 
+If the user gave you **only this repo link** (or said “onboard Kimss” without a Gateway key / vaulted model), run the guided workflow in **[ONBOARDING.md](https://raw.githubusercontent.com/kimss-ai/kimss-control-plane/main/ONBOARDING.md)** first — welcome, collect key and model, then return here to wire.
+
 **Fetch URL (always prefer this over cloning):**
 
 ```text
