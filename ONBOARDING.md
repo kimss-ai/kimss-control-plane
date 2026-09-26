@@ -14,28 +14,31 @@ Do **not** clone this repo into the customer app. Rewire the **customer** codeba
 
 ---
 
-## Step 1 — Welcome (say this first)
+## Step 1 — Ask for the Gateway API key (say this first)
 
-Relay a short welcome before editing any files. Cover:
+Keep the **first reply to a few sentences**. Do **not** explain Kimss architecture, base URL, vault aliases, headers, SDKs, or what will change yet — that comes after the key is confirmed.
 
-1. **What Kimss is** — a model-agnostic enterprise AI gateway and governance control plane. Traffic goes through Kimss; the app keeps its native OpenAI or Anthropic client (or OpenAI-compatible HTTP).
-2. **What will change** — base URL → `api.kimss.ai`, API key → a Gateway `kimss_...` workspace key (not the provider key), vaulted model alias `custom:…`, and a stable `X-Kimss-Agent-Id` header. No data-plane refactor; do not add `pip install kimss` / Maven `kimss-java` for chat.
-3. **What you need from the user** — a Gateway key and a vaulted model alias (next steps). Agents appear under `/app/agents` after the first governed request; they do **not** need to be created in the UI first.
+Ask only for credentials:
 
-Then continue to Step 2.
+1. You need their **Gateway API key** (`kimss_…` — not an OpenAI/Anthropic provider key).
+2. Which env var holds it (or should hold it): `KIMSS_API_KEY`, `OPENAI_API_KEY`, or `ANTHROPIC_API_KEY`?
+3. Optionally a short key prefix (e.g. `kimss_…waYU`) so you can confirm the right key — **never** ask them to paste the full key.
+
+If they do not have a key yet, point them to mint one at **[Gateway → Keys](https://kimss.ai/app/keys)** (`https://kimss.ai/app/keys`), then wait.
+
+**Stop and wait** for their answer before any other onboarding talk or file edits. Then continue to Step 2.
 
 ---
 
-## Step 2 — Gateway API key
+## Step 2 — Confirm the Gateway API key
 
-Ask the user to mint a workspace Gateway key if they do not already have one:
+Once they reply:
 
-1. Open **[Gateway → Keys](https://kimss.ai/app/keys)** (`https://kimss.ai/app/keys`).
-2. Mint a key. It starts with `kimss_…`.
-3. Store it as an env var — prefer `KIMSS_API_KEY`. OpenAI-compatible clients often use `OPENAI_API_KEY`; Anthropic clients often use `ANTHROPIC_API_KEY`. Same Gateway key value in either case.
-4. **Never** paste the full key into chat. **Never** commit it.
+1. Accept the env var name they chose (or default to `KIMSS_API_KEY`).
+2. If they still need to mint: open **[Gateway → Keys](https://kimss.ai/app/keys)**, create a `kimss_…` key, store it in that env var. Same value works for `OPENAI_API_KEY` / `ANTHROPIC_API_KEY` on OpenAI-compatible / Anthropic clients.
+3. **Never** paste the full key into chat. **Never** commit it.
 
-Wait for confirmation: env var name and (optionally) a short prefix such as `kimss_…waYU`. If they already have a key in the environment, accept that and move on.
+If they already confirmed a key (or prefix), move on to Step 3.
 
 ---
 

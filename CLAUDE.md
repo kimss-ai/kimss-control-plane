@@ -2,7 +2,7 @@
 
 This repo is the public Kimss control-plane hub.
 
-If the user asked you to **onboard Kimss** (or only shared this repository), follow **[ONBOARDING.md](ONBOARDING.md)** in order — welcome first, then Gateway key, vaulted model, agent id, wire, verify. Do not invent keys or model aliases.
+If the user asked you to **onboard Kimss** (or only shared this repository), follow **[ONBOARDING.md](ONBOARDING.md)** in order — ask for the Gateway API key first (keep it short), then vaulted model, agent id, wire, verify. Do not invent keys or model aliases.
 
 Wiring contract: **[AI_INTEGRATION.md](AI_INTEGRATION.md)**. Short rules: **[AGENTS.md](AGENTS.md)**.
 
