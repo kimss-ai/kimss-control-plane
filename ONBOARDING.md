@@ -16,27 +16,28 @@ Do **not** clone this repo into the customer app. Rewire the **customer** codeba
 
 ## Step 1 — Ask for the Gateway API key (say this first)
 
-Keep every reply in this step to **a few short sentences**. Do **not** explain Kimss architecture, base URL, vault aliases, headers, SDKs, or what will change yet — that comes after the key is confirmed in an env var.
+Keep every reply in this step to **a few short sentences**. Do **not** explain Kimss architecture, base URL, vault aliases, headers, SDKs, or what will change yet — that comes after the key is in `KIMSS_API_KEY`.
+
+Do **not** mention `OPENAI_API_KEY` or `ANTHROPIC_API_KEY` here. Those SDK drop-in aliases are only for Step 5 wiring.
 
 Ask only:
 
-1. Do they already have a Gateway API key (`kimss_…` — not an OpenAI/Anthropic provider key)?
-2. Which env var holds it (or should hold it): `KIMSS_API_KEY`, `OPENAI_API_KEY`, or `ANTHROPIC_API_KEY`?
-3. Optionally a short key prefix (e.g. `kimss_…waYU`) so you can confirm the right key — **never** ask them to paste the full key.
+1. Do they already have a Gateway API key (`kimss_…`) in `KIMSS_API_KEY`?
+2. Optionally a short key prefix (e.g. `kimss_…waYU`) so you can confirm the right key — **never** ask them to paste the full key.
 
 ### If they do not have a key yet
 
 Reply with **only** this, then wait:
 
-> Mint a Gateway key at https://kimss.ai/app/keys, put it in `KIMSS_API_KEY` (or tell me which env var to use), and say when it is set. Do not paste the full key here.
+> Mint a Gateway key at https://kimss.ai/app/keys, put it in `KIMSS_API_KEY`, and say when it is set. Do not paste the full key here.
 
 ### If they minted a key but have not set an env var yet
 
 Reply with **only** this, then wait:
 
-> Put that `kimss_…` key in `KIMSS_API_KEY` (or name the env var you prefer). Confirm when it is set — do not paste the full key.
+> Put that `kimss_…` key in `KIMSS_API_KEY`. Confirm when it is set — do not paste the full key.
 
-**Stop and wait** for confirmation that a key is available via an env var before any other onboarding talk or file edits. Then continue to Step 2.
+**Stop and wait** for confirmation that the key is in `KIMSS_API_KEY` before any other onboarding talk or file edits. Then continue to Step 2.
 
 ---
 
@@ -44,11 +45,11 @@ Reply with **only** this, then wait:
 
 Once they reply:
 
-1. Accept the env var name they chose (or default to `KIMSS_API_KEY`).
+1. Expect `KIMSS_API_KEY` (if they already use another name for the same `kimss_…` value, accept it and continue — do not quiz them about aliases).
 2. Treat “I minted it and put it in `KIMSS_API_KEY`” (or an equivalent prefix confirmation) as enough — do **not** re-ask for the full secret.
 3. **Never** paste the full key into chat. **Never** commit it.
 
-If they already confirmed a key (or prefix) and env var, move on to Step 3. If they only minted and still need to place it, use the short “put it in env” reply from Step 1 and wait again.
+If they already confirmed a key (or prefix) in `KIMSS_API_KEY`, move on to Step 3. If they only minted and still need to place it, use the short “put it in env” reply from Step 1 and wait again.
 
 ---
 
@@ -93,7 +94,7 @@ Summary (details and SDK keyword names are in that file):
 1. **Detect** OpenAI-compatible vs Anthropic (or both) in the customer codebase.
 2. **Keep** the native client. Do not add `KimssClient` / `pip install kimss` / `com.kimss:kimss-java` for chat. New Python agents with no client yet → [Kimss Forge](https://github.com/kimss-ai/kimss-forge) (`gateway="kimss"`).
 3. **Base URL** — OpenAI-compatible: `https://api.kimss.ai/v1`. Anthropic: `https://api.kimss.ai` only (no `/v1/messages` suffix on `base_url`).
-4. **Key** — Gateway `kimss_…` via the env the user confirmed in Step 2.
+4. **Key** — Gateway `kimss_…` from `KIMSS_API_KEY` (map into `OPENAI_API_KEY` / `ANTHROPIC_API_KEY` only if the native SDK reads those names).
 5. **Model** — exact vaulted alias from Step 3.
 6. **Headers** — always send `X-Kimss-Agent-Id` (and preferably `X-Kimss-Agent-Name`). On Python: `default_headers` on the client or `extra_headers` on `.create()`. **Never** pass a parameter named `headers` to `.create()` (`TypeError`).
 7. **Forward** Kimss agent headers through any HTTP interceptor / proxy middleware.
