@@ -4,7 +4,7 @@ This repository is the **public Kimss control-plane hub** for buyers and integra
 
 ## When the user says “onboard Kimss” (or only pastes this repo)
 
-**Run the guided workflow first** — ask only whether they have a Gateway key in `KIMSS_API_KEY` (mint link if not). Do not ask about `OPENAI_API_KEY` / `ANTHROPIC_API_KEY` until wiring. If they minted a key but have not set the env var yet, reply only with “put it in `KIMSS_API_KEY`” and wait. Then vaulted model, before editing code:
+**Run the guided workflow first** — first reply is only the mint link (`https://kimss.ai/app/keys`) plus “put it in `KIMSS_API_KEY` and say when it is set.” Do not ask about `OPENAI_API_KEY` / `ANTHROPIC_API_KEY` until wiring. If they minted a key but have not set the env var yet, reply only with “put it in `KIMSS_API_KEY`” and wait. Then vaulted model, before editing code:
 
 https://raw.githubusercontent.com/kimss-ai/kimss-control-plane/main/ONBOARDING.md
 

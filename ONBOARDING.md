@@ -16,18 +16,13 @@ Do **not** clone this repo into the customer app. Rewire the **customer** codeba
 
 ## Step 1 — Ask for the Gateway API key (say this first)
 
-Keep every reply in this step to **a few short sentences**. Do **not** explain Kimss architecture, base URL, vault aliases, headers, SDKs, or what will change yet — that comes after the key is in `KIMSS_API_KEY`.
+Keep every reply in this step to **a few short sentences**. Do **not** explain Kimss architecture, base URL, vault aliases, headers, SDKs, registry, RBAC, metering, or what will change yet — that comes after the key is in `KIMSS_API_KEY`. Do **not** paraphrase the README.
 
 Do **not** mention `OPENAI_API_KEY` or `ANTHROPIC_API_KEY` here. Those SDK drop-in aliases are only for Step 5 wiring.
 
-Ask only:
+### First reply (user just said “onboard Kimss” / pasted this repo)
 
-1. Do they already have a Gateway API key (`kimss_…`) in `KIMSS_API_KEY`?
-2. Optionally a short key prefix (e.g. `kimss_…waYU`) so you can confirm the right key — **never** ask them to paste the full key.
-
-### If they do not have a key yet
-
-Reply with **only** this, then wait:
+They have not confirmed a key yet. Reply with **only** this, then wait:
 
 > Mint a Gateway key at https://kimss.ai/app/keys, put it in `KIMSS_API_KEY`, and say when it is set. Do not paste the full key here.
 
