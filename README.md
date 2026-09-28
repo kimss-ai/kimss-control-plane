@@ -1,6 +1,6 @@
 # Kimss Control Plane
 
-> **Coding agent?** If a user asked you to onboard Kimss (or only pasted this repo link), follow **[ONBOARDING.md](ONBOARDING.md)** — ask for the Gateway API key first (keep it short), then the vaulted model, before editing code. Wiring contract: [AI_INTEGRATION.md](AI_INTEGRATION.md).
+> **Coding agent?** If a user asked you to onboard Kimss (or only pasted this repo link), follow **[ONBOARDING.md](ONBOARDING.md)** — ask for the Gateway API key first (keep it short). If they minted a key but have not set an env var yet, tell them only to put it in `KIMSS_API_KEY` and wait. Then vaulted model, then wire. Contract: [AI_INTEGRATION.md](AI_INTEGRATION.md).
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-indigo.svg)](LICENSE)
 [![CI](https://github.com/kimss-ai/kimss-control-plane/actions/workflows/ci.yml/badge.svg)](https://github.com/kimss-ai/kimss-control-plane/actions/workflows/ci.yml)
