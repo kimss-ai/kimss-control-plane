@@ -25,9 +25,10 @@ This repo is for **buyers, investors, security reviewers, and integrators**. Kim
 
 | Goal | Where to go |
 |------|-------------|
-| **Coding agent — guided onboard** | Fetch [`ONBOARDING.md`](https://raw.githubusercontent.com/kimss-ai/kimss-control-plane/main/ONBOARDING.md) (API key → vault → wire) |
+| **Coding agent — guided onboard** | Fetch [`ONBOARDING.md`](https://raw.githubusercontent.com/kimss-ai/kimss-control-plane/main/ONBOARDING.md) (API key → vault → wire → optional swarm) |
 | **Cascade / coding agent — wire gateway** | Fetch [`AI_INTEGRATION.md`](https://raw.githubusercontent.com/kimss-ai/kimss-control-plane/main/AI_INTEGRATION.md) (see also [`AGENTS.md`](AGENTS.md)) |
 | New Python agent (local, then production) | [kimss-forge](https://github.com/kimss-ai/kimss-forge) — `pip install kimss-forge`, then `gateway="kimss"` |
+| **Swarm / multi-agent trees** (Observe/Enforce) | [AI_INTEGRATION.md — Swarm lineage](AI_INTEGRATION.md#swarm-lineage-optional) — Forge, Python `KimssProxy`, or Java `KimssProxy` |
 | Internal MCP servers (register, discover, RBAC grants) | [docs/mcp-routing.md](docs/mcp-routing.md) · OpenAPI tag `mcp` |
 | Route OpenAI / Anthropic traffic in 5 minutes | [kimss-python-quickstart](https://github.com/kimss-ai/kimss-python-quickstart) |
 | Anthropic onboarding (SDK + env vars + troubleshooting) | [docs/anthropic-onboarding.md](docs/anthropic-onboarding.md) |
@@ -36,7 +37,9 @@ This repo is for **buyers, investors, security reviewers, and integrators**. Kim
 | Security / procurement overview (decision makers) | [docs/decision-maker-brief.md](docs/decision-maker-brief.md) |
 | Product docs & trust center | [kimss.ai](https://kimss.ai) · [Trust Center](https://kimss.ai/trust) |
 
-`pip install kimss` and Maven `com.kimss:kimss-java` are **deprecated for new gateway onboarding**. Keep the native OpenAI or Anthropic client, or start from Kimss Forge. Do not add those packages while wiring chat.
+**Path A (chat):** keep the native OpenAI or Anthropic client, or start from Kimss Forge. Do **not** use `KimssClient` / `AgentsApi.run` for inference.
+
+**Optional swarm:** Python `pip install "kimss>=2.2.0"` + `KimssProxy`, or Maven `ai.kimss:kimss-java` ≥0.3.0 + `KimssProxy` (see ONBOARDING Step 7).
 
 ---
 
