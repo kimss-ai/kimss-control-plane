@@ -29,8 +29,9 @@ Product companion: https://kimss.ai/docs/route_traffic
 |-----------|---------|
 | App already uses OpenAI, Anthropic, LangChain, or another OpenAI-compatible client | Keep that client. Change base URL, Gateway key, vaulted model alias, and `X-Kimss-Agent-Id`. |
 | No LLM client yet, and the user wants a new Python agent | `pip install kimss-forge`, then `gateway="kimss"` with `agent_id` and `workspace_key`. Repo: https://github.com/kimss-ai/kimss-forge |
-| Java, Node, or any other language | Vendor SDK or plain HTTP. JDK `HttpClient` sample: https://kimss.ai/docs/route_traffic |
-| Do **not** do this for new work | `pip install kimss`, Maven `com.kimss:kimss-java` / `ai.kimss:kimss-java`, or `KimssClient` / `AgentsApi.run` for chat. Those control-plane clients are **deprecated** for gateway onboarding. |
+| Java, Node, or any other language (Path A chat) | Vendor SDK or plain HTTP. JDK `HttpClient` sample: https://kimss.ai/docs/route_traffic |
+| **Optional — swarm / multi-agent trees** (Observe/Enforce) | Lineage client: Forge `delegate`, Python `pip install "kimss>=2.2.0"` + `KimssProxy`, or Java `ai.kimss:kimss-java` ≥0.3.0 + `KimssProxy`. See [Swarm lineage](#swarm-lineage-optional). |
+| Do **not** do this for Path A chat | `KimssClient` / `AgentsApi.run` (or legacy chat helpers) for inference. Those are **deprecated** for gateway onboarding. |
 
 Optional IDE MCP (`kimss-mcp-server`) is a separate extra. It is not required to route an application.
 
@@ -44,7 +45,7 @@ When the user asks you to onboard a repo to Kimss (or “route traffic through t
    - Provider Vault (`/app/vault`) — each model they call must exist as `custom:<model_id>`
    - Gateway API key (`/app/keys`) — a `kimss_...` workspace key (not the provider key)
 2. **Detect** whether the codebase uses OpenAI-compatible clients, Anthropic clients, or both (SDK imports, `OPENAI_*` / `ANTHROPIC_*` env, LangChain/Vercel AI `baseURL`, raw `fetch` to `api.openai.com` / `api.anthropic.com`).
-3. **Choose the client** using [What to install](#what-to-install). If an OpenAI or Anthropic client already exists, keep it. Never add `KimssClient`, `pip install kimss`, or `com.kimss:kimss-java`. If there is no LLM client and the user wants a new Python agent, add Kimss Forge (`pip install kimss-forge`, `gateway="kimss"`).
+3. **Choose the client** using [What to install](#what-to-install). If an OpenAI or Anthropic client already exists, keep it for Path A. Never add `KimssClient` / `AgentsApi.run` for chat. If there is no LLM client and the user wants a new Python agent, add Kimss Forge (`pip install kimss-forge`, `gateway="kimss"`). Add `KimssProxy` (Python or Java) **only** when the user wants swarm lineage ([Swarm lineage](#swarm-lineage-optional)).
 4. **Point the client at Kimss** (skip when using Kimss Forge — `gateway="kimss"` sets the listener):
    - OpenAI-compatible → `base_url` / `baseURL` = `https://api.kimss.ai/v1`
    - Anthropic → `base_url` / `baseURL` = `https://api.kimss.ai` (**no** `/v1/messages` suffix — the SDK appends it)
@@ -75,7 +76,7 @@ If a model is not vaulted, Kimss returns an error pointing to Provider Vault. **
 3. **OpenAI:** `base_url` = `https://api.kimss.ai/v1`.
 4. **Anthropic:** `base_url` = `https://api.kimss.ai` only.
 5. **Always** inject `X-Kimss-Agent-Id` (preferably also `X-Kimss-Agent-Name`) for JIT inventory, audit, spend attribution, and kill-switch. Omitting it may still proxy, but agents appear as unattributed / model-labelled shadow rows and kill-switch by name is weaker.
-6. **Call-site visibility:** pass a plain dict with `X-Kimss-Agent-Id` (and `X-Kimss-Agent-Name`) as `default_headers` on the client, or as `extra_headers` on `.create()`. The argument name is not `headers`. Do not install `kimss` just to build that dict.
+6. **Call-site visibility:** pass a plain dict with `X-Kimss-Agent-Id` (and `X-Kimss-Agent-Name`) as `default_headers` on the client, or as `extra_headers` on `.create()`. The argument name is not `headers`. Do not install a Kimss package just to build that dict (Path A).
 7. **Streaming** works the same (`stream=True` / `stream: true`) — keep Kimss base URL and headers.
 8. **Control-plane API** (registry, MCP RBAC, audit, metering, kill switch): use [`openapi/control-plane.yaml`](openapi/control-plane.yaml) — not chat endpoints. OpenAPI does **not** duplicate inference paths; this file is the inference contract. MCP register/grant shapes are in that spec; step-by-step MCP: [docs/mcp-routing.md](docs/mcp-routing.md).
 9. **Hermis** is the Kimss orchestration framework (not LangGraph). The gateway applies identity, kill switch, spend policy, and audit on the routed hop.
@@ -275,11 +276,60 @@ Then discover, attach tools in the Agents UI, and optionally upsert grants (`exa
 
 ---
 
-## Deprecated control-plane clients
+## Swarm lineage (optional)
 
-`pip install kimss` (PyPI `kimss`, [kimss-python-sdk](https://github.com/kimss-ai/kimss-python-sdk)) and Maven `com.kimss:kimss-java` ([kimss-java-sdk](https://github.com/kimss-ai/kimss-java-sdk)) are **deprecated for new gateway onboarding**. Do not add them while wiring chat.
+Path A (native OpenAI/Anthropic) does **not** send declared-run headers. Without them, Guardrails swarm mode should stay **Off** — metering, kill switch, and content Guardrails still apply.
 
-Inference helpers on those clients (`KimssClient` chat/run, `AgentsApi.run`) are already deprecated. Registry helpers (`agents.register`, `usage.report`) remain only for existing callers. New Python agents use [Kimss Forge](https://github.com/kimss-ai/kimss-forge).
+When the user wants **Observe** or **Enforce** trees on [Swarm Runs](https://kimss.ai/app/runs), wire **one** lineage path (setup-once; toggle mode later without redeploy):
+
+### Python — Kimss Forge
+
+```python
+# pip install kimss-forge
+from kimss_forge import Agent
+agent = Agent(gateway="kimss", agent_id="orchestrator", workspace_key="kimss_...")
+child = agent.delegate(agent_id="researcher", model="custom:your-model")
+```
+
+### Python — Invisible Proxy (`KimssProxy`)
+
+```python
+# pip install "kimss>=2.2.0" openai
+from kimss.proxy import KimssProxy
+proxy = KimssProxy(api_key="kimss_...", agent_id="orchestrator")
+client = proxy.openai()
+client.chat.completions.create(model="custom:your-model", messages=[...])
+proxy.delegate(agent_id="researcher")
+client.chat.completions.create(...)
+```
+
+### Java — Invisible Proxy (`KimssProxy`)
+
+```java
+// Maven: ai.kimss:kimss-java >= 0.3.0
+KimssProxy proxy = KimssProxy.builder()
+    .apiKey(System.getenv("KIMSS_API_KEY"))
+    .agentId("orchestrator")
+    .build();
+proxy.chatCompletions("custom:your-model", List.of(Map.of("role", "user", "content", "...")));
+proxy.delegate("researcher");
+```
+
+Or keep OpenAI OkHttp and pass `proxy.requestHeaders()` / `absorbResponseHeaders(...)` on each call.
+
+### Advanced — BYO orchestrator
+
+Forward `X-Kimss-Run-Id`, `X-Kimss-Depth`, `X-Kimss-Parent-Span`, `X-Kimss-Span-Id`, `X-Kimss-Lineage` from each response onto the next hop. Product doc: https://kimss.ai/docs/delegation_governance
+
+**Demo without customer code:** `/app/runs` → **Run a demo swarm**.
+
+---
+
+## Deprecated control-plane chat clients
+
+`KimssClient` chat/run and `AgentsApi.run` are **deprecated for Path A inference**. Do not use them while wiring chat.
+
+The same packages still provide **optional** swarm helpers: Python `KimssProxy` ([kimss-python-sdk](https://github.com/kimss-ai/kimss-python-sdk), PyPI `kimss>=2.2.0`) and Java `KimssProxy` ([kimss-java-sdk](https://github.com/kimss-ai/kimss-java-sdk), `ai.kimss:kimss-java` ≥0.3.0). Registry helpers (`agents.register`, `usage.report`) remain for existing callers. New Python agent loops: [Kimss Forge](https://github.com/kimss-ai/kimss-forge).
 
 ## Kill switch
 
