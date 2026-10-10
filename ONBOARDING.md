@@ -87,7 +87,7 @@ GitHub page: https://github.com/kimss-ai/kimss-control-plane/blob/main/AI_INTEGR
 Summary (details and SDK keyword names are in that file):
 
 1. **Detect** OpenAI-compatible vs Anthropic (or both) in the customer codebase.
-2. **Keep** the native client. Do not add `KimssClient` / `pip install kimss` / `com.kimss:kimss-java` for chat. New Python agents with no client yet → [Kimss Forge](https://github.com/kimss-ai/kimss-forge) (`gateway="kimss"`).
+2. **Keep** the native client for chat. Do **not** add `KimssClient` / `AgentsApi.run` for inference. New Python agents with no client yet → [Kimss Forge](https://github.com/kimss-ai/kimss-forge) (`gateway="kimss"`).
 3. **Base URL** — OpenAI-compatible: `https://api.kimss.ai/v1`. Anthropic: `https://api.kimss.ai` only (no `/v1/messages` suffix on `base_url`).
 4. **Key** — Gateway `kimss_…` from `KIMSS_API_KEY` (map into `OPENAI_API_KEY` / `ANTHROPIC_API_KEY` only if the native SDK reads those names).
 5. **Model** — exact vaulted alias from Step 3.
@@ -109,12 +109,32 @@ Do not claim success until a live call works or the user confirms Vault + key + 
 
 ---
 
+## Step 7 — Optional: Swarm / multi-agent lineage (only if the user asks)
+
+Path A (Steps 1–6) does **not** require a Kimss package. Swarm governance (Observe/Enforce on [Swarm Runs](https://kimss.ai/app/runs)) needs a **lineage client** that sends `X-Kimss-Run-Id` + child headers. Without that, leave governance **Off** — the gateway still works.
+
+Ask once: “Do you need multi-agent / swarm trees under Guardrails?” If no, stop after Step 6.
+
+If yes, pick **one** (details in `AI_INTEGRATION.md` → Swarm):
+
+| Stack | Setup-once |
+|-------|------------|
+| New Python agent | [Kimss Forge](https://github.com/kimss-ai/kimss-forge) — `gateway="kimss"` + `Agent.delegate()` |
+| Existing Python OpenAI/Anthropic app | `pip install "kimss>=2.2.0"` → `KimssProxy` (auto lineage; not `KimssClient` chat) |
+| Java | Maven `ai.kimss:kimss-java` ≥0.3.0 → `KimssProxy` (or forward lineage headers manually) |
+| Other / BYO orchestrator | Forward response lineage headers on each hop — Advanced |
+
+Then tell them to set **Observe** or **Enforce** under Guardrails → Agents & Delegation. Demo trees: **Run a demo swarm** on `/app/runs` (no model calls).
+
+---
+
 ## Related
 
 | Doc | Role |
 |-----|------|
-| [AI_INTEGRATION.md](AI_INTEGRATION.md) | Full wiring contract, troubleshooting, Guardrails |
+| [AI_INTEGRATION.md](AI_INTEGRATION.md) | Full wiring contract, swarm lineage, troubleshooting, Guardrails |
 | [AGENTS.md](AGENTS.md) | Short agent entry |
 | [docs/anthropic-onboarding.md](docs/anthropic-onboarding.md) | Anthropic-specific path |
 | [docs/mcp-routing.md](docs/mcp-routing.md) | Internal MCP (only if the user asked) |
 | https://kimss.ai/docs/route_traffic | Product companion |
+| https://kimss.ai/docs/delegation_governance | Swarm / declared-run governance |
