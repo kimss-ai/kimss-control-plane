@@ -8,9 +8,11 @@
 https://raw.githubusercontent.com/kimss-ai/kimss-control-plane/main/ONBOARDING.md
 ```
 
-When a user says something like “onboard Kimss” and points at this repo (or only pastes the repo link), **run this workflow in order**. Do **not** invent a Gateway key, vaulted model id, or agent slug. Pause after each step that needs a user answer.
+When a user says **implement**, **integrate**, **build**, or **onboard** (Kimss / gateway / control plane) and points at this repo — or only pastes the repo link — **run this workflow in order**. Do **not** invent a Gateway key or vaulted model id. The only default pause is the Gateway key (Step 1–2). Do **not** invent a `custom:` id by prefixing a model name found in the repo.
 
 Do **not** clone this repo into the customer app. Rewire the **customer** codebase only. Wiring contract: [`AI_INTEGRATION.md`](https://raw.githubusercontent.com/kimss-ai/kimss-control-plane/main/AI_INTEGRATION.md).
+
+**Done** means one live HTTP **200** with `X-Kimss-Agent-Id`, then the agent row appears on https://kimss.ai/app/agents and disabling that row is the kill switch. Do **not** claim discovery or kill switch from the key alone.
 
 ---
 
@@ -20,7 +22,7 @@ Keep every reply in this step to **a few short sentences**. Do **not** explain K
 
 Do **not** mention `OPENAI_API_KEY` or `ANTHROPIC_API_KEY` here. Those SDK drop-in aliases are only for Step 5 wiring.
 
-### First reply (user just said “onboard Kimss” / pasted this repo)
+### First reply (user just said implement / integrate / build / onboard Kimss / pasted this repo)
 
 They have not confirmed a key yet. Reply with **only** this, then wait:
 
@@ -40,7 +42,7 @@ Reply with **only** this, then wait:
 
 Once they reply:
 
-1. Expect `KIMSS_API_KEY` (if they already use another name for the same `kimss_…` value, accept it and continue — do not quiz them about aliases).
+1. Expect `KIMSS_API_KEY` (if they already use `KIMSS_WORKSPACE_KEY` or another name for the same `kimss_…` value, accept it and continue — do not quiz them about aliases). Prefer documenting `KIMSS_API_KEY` as the canonical name.
 2. Treat “I minted it and put it in `KIMSS_API_KEY`” (or an equivalent prefix confirmation) as enough — do **not** re-ask for the full secret.
 3. **Never** paste the full key into chat. **Never** commit it.
 
@@ -48,29 +50,33 @@ If they already confirmed a key (or prefix) in `KIMSS_API_KEY`, move on to Step 
 
 ---
 
-## Step 3 — Vaulted model
+## Step 3 — Resolve the vaulted model (prefer API, pause only if empty)
 
-Ask which vaulted model alias to use:
+Do **not** invent a `custom:` id. Prefer discovering what the key can already call:
 
-1. Open **[Provider Vault](https://kimss.ai/app/vault)** (`https://kimss.ai/app/vault`).
-2. Each callable model must exist as `custom:<model_id>` (exact string).
-3. If none exists yet: add a vault row for the provider model, note the alias shown in the UI, then tell the agent that exact alias.
+1. Call `GET https://api.kimss.ai/v1/models` with `Authorization: Bearer` equal to the Gateway `kimss_…` key (from `KIMSS_API_KEY` / accepted alias). Do **not** put the full key in chat.
+2. Collect `custom:<model_id>` ids from the response (OpenAI-style `data[].id` list).
+3. **If exactly one** `custom:*` id — use it and continue. Tell the user which alias you will use.
+4. **If several** — ask which exact `custom:…` string to use; wait for their answer. Do not guess.
+5. **If none** — this is the only extra pause after the key. Reply briefly and wait:
+
+> Add a model at https://kimss.ai/app/vault, then say when it is saved (or paste the exact `custom:…` alias). Do not invent an id.
 
 **Rules for the agent:**
 
-- Use **only** the alias the user names.
+- Use **only** an id returned by `GET /v1/models` or named by the user from Vault.
 - Do **not** invent an id by prefixing `custom:` onto a model name found in the repo.
-- A **400** “model not registered” means that id is missing from Vault — stop and use the id on `/app/vault`. Do not change `base_url` to clear it.
-
-Wait for the user’s exact `custom:…` string before wiring.
+- A **400** “model not registered” means that id is missing from Vault — stop and use the id on `/app/vault` or re-list with `GET /v1/models`. Do not change `base_url` to clear it.
 
 ---
 
-## Step 4 — Agent identity
+## Step 4 — Agent identity (derive and continue)
 
-Propose a stable slug for `X-Kimss-Agent-Id` from the service name (e.g. `acme-shop-assistant`, `billing-bot`). Prefer also `X-Kimss-Agent-Name` (human-readable).
+Derive a stable slug for `X-Kimss-Agent-Id` from the service or app name (e.g. `acme-shop-assistant`, `billing-bot`). Prefer also `X-Kimss-Agent-Name` (human-readable).
 
-Ask the user to confirm or override. Use one stable id per service so audit, spend, and kill-switch stay attributable.
+**Do not wait** for confirmation unless the user objects or the slug is ambiguous. Tell them the id you will send, then continue to wiring.
+
+Use one stable id per service so audit, spend, and kill-switch stay attributable. `X-Kimss-Agent-Id` is the header that creates the Agents inventory row and arms the kill switch. Optional client tags (`X-Kimss-Client`, `X-Kimss-SDK-Context`) are **not** required for Path A.
 
 ---
 
@@ -89,23 +95,23 @@ Summary (details and SDK keyword names are in that file):
 1. **Detect** OpenAI-compatible vs Anthropic (or both) in the customer codebase.
 2. **Keep** the native client for chat. Do **not** add `KimssClient` / `AgentsApi.run` for inference. New Python agents with no client yet → [Kimss Forge](https://github.com/kimss-ai/kimss-forge) (`gateway="kimss"`).
 3. **Base URL** — OpenAI-compatible: `https://api.kimss.ai/v1`. Anthropic: `https://api.kimss.ai` only (no `/v1/messages` suffix on `base_url`).
-4. **Key** — Gateway `kimss_…` from `KIMSS_API_KEY` (map into `OPENAI_API_KEY` / `ANTHROPIC_API_KEY` only if the native SDK reads those names).
+4. **Key** — Gateway `kimss_…` from `KIMSS_API_KEY` (map into `OPENAI_API_KEY` / `ANTHROPIC_API_KEY` only if the native SDK reads those names). Accept `KIMSS_WORKSPACE_KEY` as the same value when already set.
 5. **Model** — exact vaulted alias from Step 3.
 6. **Headers** — always send `X-Kimss-Agent-Id` (and preferably `X-Kimss-Agent-Name`). On Python: `default_headers` on the client or `extra_headers` on `.create()`. **Never** pass a parameter named `headers` to `.create()` (`TypeError`).
 7. **Forward** Kimss agent headers through any HTTP interceptor / proxy middleware.
 
 ---
 
-## Step 6 — Verify
+## Step 6 — Verify (this is when discovery and kill switch become ready)
 
-1. Make one non-stream chat/completions or messages call with the vaulted model.
+1. Make one non-stream chat/completions or messages call with the vaulted model and `X-Kimss-Agent-Id`.
 2. Expect **200** and a normal assistant payload (not an HTML login page).
-3. In Kimss UI, **[Agents](https://kimss.ai/app/agents)** (`https://kimss.ai/app/agents`) should show the `X-Kimss-Agent-Id` after the first call.
+3. Tell the user: open **[Agents](https://kimss.ai/app/agents)** (`https://kimss.ai/app/agents`) — the `X-Kimss-Agent-Id` should appear after this first call. **Disabling that row is the kill switch** (next routed call with that id → **403** `agent_disabled`).
 4. Optional meter: `GET https://api.kimss.ai/api/v1/governed-requests/meter` with `Authorization: Bearer kimss_…`.
 
 **Guardrails:** HTTP **451** or tool JSON `policy_violation` / `authority_boundary` means the route worked and policy fired. Do **not** change `base_url` or install a Kimss SDK to clear them. See the Guardrails section in `AI_INTEGRATION.md` and https://kimss.ai/docs/trust_safety.
 
-Do not claim success until a live call works or the user confirms Vault + key + model alias.
+Do not claim success until a live call returns **200** (or the user confirms Vault + key + model alias and a successful call). Do not claim kill switch or agent discovery from the key alone.
 
 ---
 
