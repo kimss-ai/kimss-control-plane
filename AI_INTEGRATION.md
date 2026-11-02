@@ -42,7 +42,7 @@ Optional IDE MCP (`kimss-mcp-server`) is a separate extra. It is not required to
 When the user asks you to implement / integrate / build / onboard a repo to Kimss (or “route traffic through the Kimss gateway”):
 
 1. **Confirm the Gateway key** (`KIMSS_API_KEY` or accepted alias). If missing, stop and point them to `/app/keys` (see ONBOARDING.md Step 1).
-2. **Resolve the vaulted model** with `GET https://api.kimss.ai/v1/models` (Bearer = Gateway key). Use the sole `custom:*` id, ask which when several, or pause at `/app/vault` when empty. Do not invent a `custom:` id.
+2. **Resolve the vaulted model** with `GET https://api.kimss.ai/v1/models` (Bearer = Gateway key). Use the sole `custom:*` id; when several, explain one request uses one model and recommend a default (accept “any/all” by picking one listed id); pause at `/app/vault` when empty. If you cannot call the API, ask the user to paste the exact `custom:…` from `/app/vault`. Do not invent a `custom:` id. Replace bare provider model strings in the app with that alias (`KIMSS_MODEL`).
 3. **Detect** whether the codebase uses OpenAI-compatible clients, Anthropic clients, or both (SDK imports, `OPENAI_*` / `ANTHROPIC_*` env, LangChain/Vercel AI `baseURL`, raw `fetch` to `api.openai.com` / `api.anthropic.com`).
 4. **Choose the client** using [What to install](#what-to-install). If an OpenAI or Anthropic client already exists, keep it for Path A. Never add `KimssClient` / `AgentsApi.run` for chat. If there is no LLM client and the user wants a new Python agent, add Kimss Forge (`pip install kimss-forge`, `gateway="kimss"`). Add `KimssProxy` (Python or Java) **only** when the user wants swarm lineage ([Swarm lineage](#swarm-lineage-optional)).
 5. **Point the client at Kimss** (skip when using Kimss Forge — `gateway="kimss"` sets the listener):
@@ -102,6 +102,8 @@ KIMSS_AGENT_NAME="My Service"
 KIMSS_MODEL="custom:your-model-id"
 ```
 
+`KIMSS_MODEL` is the canonical vaulted alias. Replace any bare provider model string still in the app (for example `gpt-4.1-nano` or `gpt-4o`) with the exact `custom:…` from Step 3 / Vault. Leaving the provider id after pointing `base_url` at Kimss usually returns a Vault / model-not-registered error.
+
 You still must attach `X-Kimss-Agent-Id` in code or middleware — env alone does not add headers for most SDKs.
 
 ## SDK keyword names
@@ -137,7 +139,7 @@ client = OpenAI(
     },
 )
 response = client.chat.completions.create(
-    model="custom:your-model-id",  # vaulted alias
+    model="custom:your-model-id",  # vaulted alias — not a bare provider id
     messages=[{"role": "user", "content": "Execute audit."}],
 )
 ```
@@ -233,7 +235,7 @@ Web Search and Internal MCP start **off**. A hello-world chat completion does no
 | HTTP **451** `safety_check_failed` | Safety backend failed closed | Not a bad API key. Do not retry in a loop. |
 | HTTP **403** `web_search_disabled` | Web Search is off | Chat without that tool. Do not flip the workspace opt-in unless asked. |
 | HTTP **403** `mcp_disabled` | Internal MCP is off | Only continue to [Internal MCP routing](#internal-mcp-routing) if the user asked to call their MCP servers. |
-| HTTP **403** `agent_disabled` | Kill switch | Re-enable under **Agents**, or send a different `X-Kimss-Agent-Id`. |
+| HTTP **403** `agent_disabled` | Kill switch **or** first-seen id under **quarantine** auto-registration | Open **[Agents](https://kimss.ai/app/agents)** and **Re-enable** that row. If every new id is 403, set agent auto-registration to **Allow** under Guardrails (paid workspaces often default to quarantine). Do **not** remove `X-Kimss-Agent-Id` to “fix” chat. |
 | HTTP **200** tool JSON `error: policy_violation` | Argument shape rule (allowlist, regex, exact, max length, deny pattern) | The chat call succeeded. Change the tool arguments or the rule. Do not rewrite the HTTP client. |
 | HTTP **200** tool JSON `error: authority_boundary` | Trusted source: a model- or tool-supplied value was blocked | The human must name the value this turn. Not a wiring bug. |
 | HTTP **200** `hitl_pending` (or **409** with `X-Kimss-Hitl-Protocol: interrupt`) on `POST /v1/agents/run` | Approvals for an irreversible tool (Scale+) | Resume the same thread after approve. Invisible Proxy `POST /v1/chat/completions` does not run this pause. |
@@ -247,7 +249,7 @@ Web Search and Internal MCP start **off**. A hello-world chat completion does no
 | `TypeError` … `unexpected keyword argument 'headers'` | Passed `headers=` to `.create()` | Use `default_headers` on the client, or `extra_headers` on `.create()`. See [SDK keyword names](#sdk-keyword-names). |
 | `401` / invalid API key | Wrong or missing `kimss_...` key | Mint under **Gateway → Keys** (`/app/keys`) |
 | `400` / missing agent / attribution errors | Header stripped or empty where required by a path | Set `X-Kimss-Agent-Id` on every inference call |
-| `403` / `agent_disabled` | Kill switch | Re-enable under **Governance → Agents** |
+| `403` / `agent_disabled` | Kill switch, or new id quarantined on first sight | Re-enable under **Agents**. If brand-new ids all 403: Re-enable the row or set auto-registration to Allow under Guardrails. Do not drop the agent header. |
 | `429` / `governed_requests_exhausted` | Monthly allowance | Check meter or [pricing](https://kimss.ai/pricing) |
 | `429` / `custom_endpoint_cap_exceeded` | Vault token cap | Raise/disable cap on the vaulted endpoint |
 | Model not found / vault error | Model not registered as `custom:…` | Vault under `/app/vault`; match the exact model string |

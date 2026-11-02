@@ -14,6 +14,8 @@ Do **not** clone this repo into the customer app. Rewire the **customer** codeba
 
 **Done** means one live HTTP **200** with `X-Kimss-Agent-Id`, then the agent row appears on https://kimss.ai/app/agents and disabling that row is the kill switch. Do **not** claim discovery or kill switch from the key alone.
 
+**Already done Vault + Gateway key?** (for example the in-app paste on https://kimss.ai/docs/route_traffic said so) — skip Steps 1–2 and continue from Step 3.
+
 ---
 
 ## Step 1 — Ask for the Gateway API key (say this first)
@@ -57,10 +59,16 @@ Do **not** invent a `custom:` id. Prefer discovering what the key can already ca
 1. Call `GET https://api.kimss.ai/v1/models` with `Authorization: Bearer` equal to the Gateway `kimss_…` key (from `KIMSS_API_KEY` / accepted alias). Do **not** put the full key in chat.
 2. Collect `custom:<model_id>` ids from the response (OpenAI-style `data[].id` list).
 3. **If exactly one** `custom:*` id — use it and continue. Tell the user which alias you will use.
-4. **If several** — ask which exact `custom:…` string to use; wait for their answer. Do not guess.
+4. **If several** — each chat request uses **one** model. The others stay available later via `KIMSS_MODEL`. Prefer a short, clear ask:
+
+> Your Vault has several models (`custom:…`, `custom:…`, …). Which should this app use by default? If you say “any” or “all,” I’ll pick `custom:<smallest-or-first>` and you can change it with `KIMSS_MODEL`.
+
+   If they say **any / all / whatever / yes** (or do not care), pick one vaulted id (prefer the smallest / cheapest name when obvious, otherwise the first listed), tell them which you chose, and continue. Do **not** invent an id that was not in the list.
 5. **If none** — this is the only extra pause after the key. Reply briefly and wait:
 
 > Add a model at https://kimss.ai/app/vault, then say when it is saved (or paste the exact `custom:…` alias). Do not invent an id.
+
+6. **If you cannot call the API** (no access to the user’s env / key in this session) — do not invent an id. Ask them to open https://kimss.ai/app/vault and paste the exact `custom:…` alias shown there (or the `id` from a `GET /v1/models` response they run themselves).
 
 **Rules for the agent:**
 
@@ -107,7 +115,8 @@ Summary (details and SDK keyword names are in that file):
 1. Make one non-stream chat/completions or messages call with the vaulted model and `X-Kimss-Agent-Id`.
 2. Expect **200** and a normal assistant payload (not an HTML login page).
 3. Tell the user: open **[Agents](https://kimss.ai/app/agents)** (`https://kimss.ai/app/agents`) — the `X-Kimss-Agent-Id` should appear after this first call. **Disabling that row is the kill switch** (next routed call with that id → **403** `agent_disabled`).
-4. Optional meter: `GET https://api.kimss.ai/api/v1/governed-requests/meter` with `Authorization: Bearer kimss_…`.
+4. **If the first call returns 403 `agent_disabled` on a brand-new id** (including the first ever call with that header): do **not** strip `X-Kimss-Agent-Id` and do **not** change `base_url`. Paid workspaces often **quarantine** unknown agent ids until an admin re-enables them. Tell the user to open https://kimss.ai/app/agents, **Re-enable** the new row (or set agent auto-registration to Allow under Guardrails), then retry the same call. Trying a different id alone usually hits the same quarantine.
+5. Optional meter: `GET https://api.kimss.ai/api/v1/governed-requests/meter` with `Authorization: Bearer kimss_…`.
 
 **Guardrails:** HTTP **451** or tool JSON `policy_violation` / `authority_boundary` means the route worked and policy fired. Do **not** change `base_url` or install a Kimss SDK to clear them. See the Guardrails section in `AI_INTEGRATION.md` and https://kimss.ai/docs/trust_safety.
 
