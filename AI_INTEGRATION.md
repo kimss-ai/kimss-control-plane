@@ -235,7 +235,8 @@ Web Search and Internal MCP start **off**. A hello-world chat completion does no
 | HTTP **451** `safety_check_failed` | Safety backend failed closed | Not a bad API key. Do not retry in a loop. |
 | HTTP **403** `web_search_disabled` | Web Search is off | Chat without that tool. Do not flip the workspace opt-in unless asked. |
 | HTTP **403** `mcp_disabled` | Internal MCP is off | Only continue to [Internal MCP routing](#internal-mcp-routing) if the user asked to call their MCP servers. |
-| HTTP **403** `agent_disabled` | Kill switch **or** first-seen id under **quarantine** auto-registration | Open **[Agents](https://kimss.ai/app/agents)** and **Re-enable** that row. If every new id is 403, set agent auto-registration to **Allow** under Guardrails (paid workspaces often default to quarantine). Do **not** remove `X-Kimss-Agent-Id` to “fix” chat. |
+| HTTP **403** `agent_disabled` | Admin kill switch (Disable on Agents) | **Re-enable** that row under **[Agents](https://kimss.ai/app/agents)**, or send a different `X-Kimss-Agent-Id`. Do **not** remove the header to “fix” chat. |
+| HTTP **403** `agent_quarantined` | First-seen id under **quarantine** auto-registration (paid default) | Open **[Agents](https://kimss.ai/app/agents)** and **Re-enable** the new row, or set agent auto-registration to **Allow** under Guardrails, then retry the same call. Trying a different id alone usually hits the same quarantine. |
 | HTTP **200** tool JSON `error: policy_violation` | Argument shape rule (allowlist, regex, exact, max length, deny pattern) | The chat call succeeded. Change the tool arguments or the rule. Do not rewrite the HTTP client. |
 | HTTP **200** tool JSON `error: authority_boundary` | Trusted source: a model- or tool-supplied value was blocked | The human must name the value this turn. Not a wiring bug. |
 | HTTP **200** `hitl_pending` (or **409** with `X-Kimss-Hitl-Protocol: interrupt`) on `POST /v1/agents/run` | Approvals for an irreversible tool (Scale+) | Resume the same thread after approve. Invisible Proxy `POST /v1/chat/completions` does not run this pause. |
@@ -249,7 +250,8 @@ Web Search and Internal MCP start **off**. A hello-world chat completion does no
 | `TypeError` … `unexpected keyword argument 'headers'` | Passed `headers=` to `.create()` | Use `default_headers` on the client, or `extra_headers` on `.create()`. See [SDK keyword names](#sdk-keyword-names). |
 | `401` / invalid API key | Wrong or missing `kimss_...` key | Mint under **Gateway → Keys** (`/app/keys`) |
 | `400` / missing agent / attribution errors | Header stripped or empty where required by a path | Set `X-Kimss-Agent-Id` on every inference call |
-| `403` / `agent_disabled` | Kill switch, or new id quarantined on first sight | Re-enable under **Agents**. If brand-new ids all 403: Re-enable the row or set auto-registration to Allow under Guardrails. Do not drop the agent header. |
+| `403` / `agent_disabled` | Admin kill switch | Re-enable under **Agents** |
+| `403` / `agent_quarantined` | New id quarantined on first sight | Re-enable the row under **Agents**, or set auto-registration to Allow under Guardrails, then retry. Do not drop the agent header. |
 | `429` / `governed_requests_exhausted` | Monthly allowance | Check meter or [pricing](https://kimss.ai/pricing) |
 | `429` / `custom_endpoint_cap_exceeded` | Vault token cap | Raise/disable cap on the vaulted endpoint |
 | Model not found / vault error | Model not registered as `custom:…` | Vault under `/app/vault`; match the exact model string |
